@@ -6,17 +6,22 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import io.flutter.plugin.common.MethodCall
+import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), MethodChannel.MethodCallHandler {
+
+    var snackBarView: android.view.View? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        MyApplication.methodChannel.setMethodCallHandler(this)
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar))
 
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
+            snackBarView = view
+            MyApplication.methodChannel.invokeMethod("count", null)
         }
     }
 
@@ -33,6 +38,16 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_settings -> true
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        when (call.method) {
+            "countResult" -> {
+                if (snackBarView == null) return
+                Snackbar.make(snackBarView!!, "Count: ${call.arguments}", Snackbar.LENGTH_LONG)
+                    .show()
+            }
         }
     }
 }
