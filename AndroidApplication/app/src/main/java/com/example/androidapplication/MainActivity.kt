@@ -6,22 +6,29 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterActivityLaunchConfigs
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : AppCompatActivity(), MethodChannel.MethodCallHandler {
 
     var snackBarView: android.view.View? = null
+    lateinit var methodChannel: MethodChannel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        MyApplication.methodChannel.setMethodCallHandler(this)
+        methodChannel = MethodChannel(
+            MyApplication.flutterEngine.dartExecutor.binaryMessenger,
+            "dart_multi_platform"
+        )
+        methodChannel.setMethodCallHandler(this)
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar))
 
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener { view ->
             snackBarView = view
-            MyApplication.methodChannel.invokeMethod("count", null)
+            methodChannel.invokeMethod("count", null)
         }
     }
 
@@ -44,6 +51,7 @@ class MainActivity : AppCompatActivity(), MethodChannel.MethodCallHandler {
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
             "countResult" -> {
+                println(call.method)
                 if (snackBarView == null) return
                 Snackbar.make(snackBarView!!, "Count: ${call.arguments}", Snackbar.LENGTH_LONG)
                     .show()
